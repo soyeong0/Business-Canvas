@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>비즈니스 모델 캔버스 — 당 함량 분석 앱</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff;
+    --bg2: #f7f7f8;
+    --border: #e4e4e7;
+    --border2: #d1d1d6;
+    --text: #18181b;
+    --text2: #71717a;
+    --text3: #a1a1aa;
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1e;
+      --bg2: #2c2c2e;
+      --border: #3a3a3c;
+      --border2: #48484a;
+      --text: #f2f2f7;
+      --text2: #aeaeb2;
+      --text3: #636366;
+    }
+  }
+  body { background: var(--bg2); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--text); min-height: 100vh; padding: 24px 16px 40px; }
+  h1 { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: var(--text2); margin-bottom: 20px; }
+  .grid { display: grid; gap: 6px; max-width: 1100px; margin: 0 auto; }
+  .row1 { display: grid; grid-template-columns: 2fr 1.5fr 2fr 1.5fr 2fr; gap: 6px; min-height: 230px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; min-height: 110px; }
+  .split { display: grid; grid-template-rows: 1fr 1fr; gap: 6px; }
+  .cell {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 11px 13px;
+    display: flex; flex-direction: column; gap: 5px;
+    overflow: hidden;
+    transition: border-color .15s;
+  }
+  .cell:hover { border-color: var(--border2); }
+  .lbl { font-size: 9px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text3); flex-shrink: 0; }
+  .items { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; min-height: 0; }
+  .item { font-size: 11.5px; color: var(--text); line-height: 1.4; padding: 3px 0; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 6px; }
+  .item:last-child { border-bottom: none; }
+  .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--text3); flex-shrink: 0; margin-top: 5px; }
+  .del { font-size: 13px; color: var(--text3); background: none; border: none; cursor: pointer; padding: 0 2px; margin-left: auto; flex-shrink: 0; opacity: 0; transition: opacity .1s; line-height: 1; }
+  .item:hover .del { opacity: 1; }
+  .addbtn { font-size: 10px; color: var(--text3); background: none; border: 1px dashed var(--border); border-radius: 6px; padding: 3px 9px; cursor: pointer; flex-shrink: 0; text-align: left; transition: color .1s, border-color .1s; }
+  .addbtn:hover { color: var(--text2); border-color: var(--border2); }
+  .empty { font-size: 10px; color: var(--text3); font-style: italic; }
+  .t-teal   { border-top: 3px solid #1D9E75; }
+  .t-purple { border-top: 3px solid #7F77DD; }
+  .t-coral  { border-top: 3px solid #D85A30; }
+  .t-blue   { border-top: 3px solid #378ADD; }
+  .t-amber  { border-top: 3px solid #CA8A04; }
+  .t-green  { border-top: 3px solid #639922; }
+  .t-yellow { border-top: 3px solid #D97706; }
+  .t-red    { border-top: 3px solid #E24B4A; }
+  .t-emerald{ border-top: 3px solid #1D9E75; }
+  .drawer { max-width: 1100px; margin: 8px auto 0; background: var(--bg); border: 1px solid var(--border2); border-radius: var(--radius); padding: 14px 16px; display: none; }
+  .drawer.open { display: block; }
+  .dhead { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .dtitle { font-size: 13px; font-weight: 500; color: var(--text); flex: 1; }
+  .dclose { font-size: 20px; color: var(--text3); background: none; border: none; cursor: pointer; line-height: 1; padding: 0 3px; }
+  textarea {
+    width: 100%; font-size: 13px; padding: 8px 10px;
+    border: 1px solid var(--border); border-radius: 7px;
+    background: var(--bg2); color: var(--text);
+    font-family: inherit; resize: none; height: 56px; margin-bottom: 8px; display: block;
+  }
+  textarea:focus { outline: none; border-color: var(--border2); }
+  .savebtn { font-size: 12px; padding: 5px 16px; border: 1px solid var(--border2); border-radius: 7px; background: var(--bg); color: var(--text); cursor: pointer; }
+  .savebtn:hover { background: var(--bg2); }
+</style>
+</head>
+<body>
+<div style="max-width:1100px;margin:0 auto 16px;">
+  <h1>비즈니스 모델 캔버스</h1>
+  <div class="subtitle">당 함량 분석 앱 — 블록을 클릭해 내용을 추가·수정하세요</div>
+</div>
+
+<div class="grid">
+  <div class="row1">
+    <div class="cell t-teal">
+      <div class="lbl">핵심 파트너</div>
+      <div class="items" id="i-kp"></div>
+      <button class="addbtn" onclick="open_('kp')">+ 추가</button>
+    </div>
+    <div class="split">
+      <div class="cell t-purple">
+        <div class="lbl">핵심 활동</div>
+        <div class="items" id="i-ka"></div>
+        <button class="addbtn" onclick="open_('ka')">+ 추가</button>
+      </div>
+      <div class="cell t-coral">
+        <div class="lbl">핵심 자원</div>
+        <div class="items" id="i-kr"></div>
+        <button class="addbtn" onclick="open_('kr')">+ 추가</button>
+      </div>
+    </div>
+    <div class="cell t-blue">
+      <div class="lbl">가치 제안</div>
+      <div class="items" id="i-vp"></div>
+      <button class="addbtn" onclick="open_('vp')">+ 추가</button>
+    </div>
+    <div class="split">
+      <div class="cell t-amber">
+        <div class="lbl">고객 관계</div>
+        <div class="items" id="i-cr"></div>
+        <button class="addbtn" onclick="open_('cr')">+ 추가</button>
+      </div>
+      <div class="cell t-green">
+        <div class="lbl">채널</div>
+        <div class="items" id="i-ch"></div>
+        <button class="addbtn" onclick="open_('ch')">+ 추가</button>
+      </div>
+    </div>
+    <div class="cell t-yellow">
+      <div class="lbl">고객 세그먼트</div>
+      <div class="items" id="i-cs"></div>
+      <button class="addbtn" onclick="open_('cs')">+ 추가</button>
+    </div>
+  </div>
+  <div class="row2">
+    <div class="cell t-red">
+      <div class="lbl">비용 구조</div>
+      <div class="items" id="i-cost"></div>
+      <button class="addbtn" onclick="open_('cost')">+ 추가</button>
+    </div>
+    <div class="cell t-emerald">
+      <div class="lbl">수익 흐름</div>
+      <div class="items" id="i-rev"></div>
+      <button class="addbtn" onclick="open_('rev')">+ 추가</button>
+    </div>
+  </div>
+</div>
+
+<div class="drawer" id="drawer">
+  <div class="dhead">
+    <div class="dtitle" id="dtitle"></div>
+    <button class="dclose" onclick="close_()">×</button>
+  </div>
+  <textarea id="dinput" placeholder="내용을 입력하고 Enter를 누르세요 (Shift+Enter 줄바꿈)"></textarea>
+  <button class="savebtn" onclick="save_()">추가</button>
+</div>
+
+<script>
+const LABELS = {
+  kp:'핵심 파트너', ka:'핵심 활동', kr:'핵심 자원', vp:'가치 제안',
+  cr:'고객 관계', ch:'채널', cs:'고객 세그먼트', cost:'비용 구조', rev:'수익 흐름'
+};
+const DATA = {
+  kp: ['식약처 식품 영양 DB'],
+  ka: ['음식 사진 AI 당 함량 인식', '혈당 스파이크 예측 알고리즘', '대안 메뉴 추천 시스템', '보호자 알림 서비스 운영'],
+  kr: ['음식 이미지 학습 데이터셋', '식품 영양 성분 DB', '사용자 혈당·활동량 데이터', 'AI/ML 개발 인력'],
+  vp: ['사진 한 장으로 즉시 당 함량 확인', '혈당 스파이크 시각화 예측', '낮은 당 대안 메뉴 즉시 제안', '보호자에게 식사 데이터 자동 전송'],
+  cr: ['개인화 일간 리포트', '혈당 목표 달성 알림', '보호자-환자 연결 기능', '건강 팁 푸시 알림'],
+  ch: ['iOS / Android 앱 스토어', 'SNS 광고 (30~40대 타깃)', '지역 당뇨 교육 프로그램 연계'],
+  cs: ['당뇨 전단계 중년층 30~49세', '고당 섭취 청소년·청년 13~29세', '당뇨 환자 보호자 (지역 특화)', '당뇨 확진 환자'],
+  cost: ['AI 모델 개발·유지비', '클라우드 서버 운영비', '영양 DB 라이선스 비용', '마케팅·사용자 획득 비용'],
+  rev: ['프리미엄 구독 (혈당 예측·분석)', '보호자 알림 구독료', '건강식품 제휴 커머스']
+};
+let cur = null;
+
+function render(k) {
+  const el = document.getElementById('i-' + k);
+  if (!el) return;
+  if (!DATA[k].length) { el.innerHTML = '<div class="empty">클릭해서 추가</div>'; return; }
+  el.innerHTML = DATA[k].map((v, i) =>
+    `<div class="item"><div class="dot"></div><span style="flex:1">${v}</span><button class="del" onclick="del_('${k}',${i})">×</button></div>`
+  ).join('');
+}
+function del_(k, i) { DATA[k].splice(i, 1); render(k); }
+function open_(k) {
+  cur = k;
+  document.getElementById('dtitle').textContent = LABELS[k];
+  document.getElementById('dinput').value = '';
+  document.getElementById('drawer').classList.add('open');
+  setTimeout(() => document.getElementById('dinput').focus(), 40);
+}
+function close_() { document.getElementById('drawer').classList.remove('open'); cur = null; }
+function save_() {
+  const v = document.getElementById('dinput').value.trim();
+  if (!v || !cur) return;
+  DATA[cur].push(v);
+  render(cur);
+  document.getElementById('dinput').value = '';
+  document.getElementById('dinput').focus();
+}
+document.getElementById('dinput').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); save_(); }
+  if (e.key === 'Escape') close_();
+});
+Object.keys(DATA).forEach(render);
+</script>
+</body>
+</html>
